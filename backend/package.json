@@ -6,8 +6,9 @@
   "type": "module",
   "scripts": {
     "start": "node backend/index.js",
-  "dev": "nodemon backend/index.js",
-  "build": "npm install"
+    "dev": "nodemon backend/index.js",
+    "build": "npm install"
+
   },
   "keywords": [],
   "author": "vivek kumar anmol",
