@@ -22,6 +22,12 @@ const addProduct = asyncHandler(async (req, res) => {
     }
 
     const product = new Product({ ...req.fields });
+
+    // Prevent invalid category
+    if (!product.category || product.category === "undefined") {
+      delete product.category;
+    }
+
     await product.save();
     res.json(product);
   } catch (error) {
@@ -50,9 +56,16 @@ const updateProductDetails = asyncHandler(async (req, res) => {
         return res.json({ error: "Quantity is required" });
     }
 
+    const updateFields = { ...req.fields };
+
+    // Prevent invalid category update
+    if (!updateFields.category || updateFields.category === "undefined") {
+      delete updateFields.category;
+    }
+
     const product = await Product.findByIdAndUpdate(
       req.params.id,
-      { ...req.fields },
+      updateFields,
       { new: true }
     );
 
