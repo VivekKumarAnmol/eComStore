@@ -101,7 +101,7 @@ const AdminDashboard = () => {
 
             <p className="mt-5">Sales</p>
             <h1 className="text-xl font-bold">
-              $ {isLoading ? <Loader /> : sales.totalSales.toFixed(2)}
+              ₹ {isLoading ? <Loader /> : sales.totalSales.toFixed(2)}
             </h1>
           </div>
           <div className="rounded-lg bg-black p-5 w-[20rem] mt-5">
@@ -111,7 +111,7 @@ const AdminDashboard = () => {
 
             <p className="mt-5">Customers</p>
             <h1 className="text-xl font-bold">
-              $ {isLoading ? <Loader /> : customers?.length}
+              No. {isLoading ? <Loader /> : customers?.length}
             </h1>
           </div>
           <div className="rounded-lg bg-black p-5 w-[20rem] mt-5">
@@ -121,7 +121,7 @@ const AdminDashboard = () => {
 
             <p className="mt-5">All Orders</p>
             <h1 className="text-xl font-bold">
-              $ {isLoading ? <Loader /> : orders?.totalOrders}
+              No. {isLoading ? <Loader /> : orders?.totalOrders}
             </h1>
           </div>
         </div>

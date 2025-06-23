@@ -40,6 +40,10 @@ const OrderList = () => {
                     src={order.orderItems[0].image}
                     alt={order._id}
                     className="w-[5rem] pt-4"
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = "/placeholder.png";
+                    }}
                   />
                 </td>
                 <td>{order._id}</td>
@@ -50,7 +54,7 @@ const OrderList = () => {
                   {order.createdAt ? order.createdAt.substring(0, 10) : "N/A"}
                 </td>
 
-                <td>$ {order.totalPrice}</td>
+                <td>₹ {order.totalPrice}</td>
 
                 <td className="py-2">
                   {order.isPaid ? (
@@ -77,8 +81,11 @@ const OrderList = () => {
                 </td>
 
                 <td>
-                  <Link to={`/order/${order._id}`}>
-                    <button>More</button>
+                  <Link
+                    to={`/order/${order._id}`}
+                    className="inline-block px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                  >
+                    More
                   </Link>
                 </td>
               </tr>
