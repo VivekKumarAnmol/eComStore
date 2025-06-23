@@ -6,12 +6,13 @@ import {
   savePaymentMethod,
 } from "../../redux/features/cart/cartSlice";
 import ProgressSteps from "../../components/ProgressSteps";
+import QRCode from "react-qr-code";
 
 const Shipping = () => {
   const cart = useSelector((state) => state.cart);
   const { shippingAddress } = cart;
 
-  const [paymentMethod, setPaymentMethod] = useState("PayPal");
+  const [paymentMethod, setPaymentMethod] = useState("Paytm");
   const [address, setAddress] = useState(shippingAddress.address || "");
   const [city, setCity] = useState(shippingAddress.city || "");
   const [postalCode, setPostalCode] = useState(
@@ -95,12 +96,22 @@ const Shipping = () => {
                   type="radio"
                   className="form-radio text-pink-500"
                   name="paymentMethod"
-                  value="PayPal"
-                  checked={paymentMethod === "PayPal"}
+                  value="Paytm"
+                  checked={paymentMethod === "Paytm"}
                   onChange={(e) => setPaymentMethod(e.target.value)}
                 />
-
-                <span className="ml-2">PayPal or Credit Card</span>
+                <span className="ml-2">Paytm</span>
+              </label>
+              <label className="inline-flex items-center ml-6">
+                <input
+                  type="radio"
+                  className="form-radio text-pink-500"
+                  name="paymentMethod"
+                  value="CashOnDelivery"
+                  checked={paymentMethod === "CashOnDelivery"}
+                  onChange={(e) => setPaymentMethod(e.target.value)}
+                />
+                <span className="ml-2">Cash on Delivery</span>
               </label>
             </div>
           </div>

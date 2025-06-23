@@ -1,19 +1,19 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { PayPalButtons, usePayPalScriptReducer } from "@paypal/react-paypal-js";
 import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import Messsage from "../../components/Message";
 import Loader from "../../components/Loader";
+import QRCode from "react-qr-code";
 import {
   useDeliverOrderMutation,
   useGetOrderDetailsQuery,
-  useGetPaypalClientIdQuery,
   usePayOrderMutation,
 } from "../../redux/api/orderApiSlice";
 
 const Order = () => {
   const { id: orderId } = useParams();
+  const [showQr, setShowQr] = useState(false);
 
   const {
     data: order,
@@ -27,60 +27,21 @@ const Order = () => {
     useDeliverOrderMutation();
   const { userInfo } = useSelector((state) => state.auth);
 
-  const [{ isPending }, paypalDispatch] = usePayPalScriptReducer();
+  // Remove PayPal script reducer and client id query
+  // const [{ isPending }, paypalDispatch] = usePayPalScriptReducer();
+  // const {
+  //   data: paypal,
+  //   isLoading: loadingPaPal,
+  //   error: errorPayPal,
+  // } = useGetPaypalClientIdQuery();
 
-  const {
-    data: paypal,
-    isLoading: loadingPaPal,
-    error: errorPayPal,
-  } = useGetPaypalClientIdQuery();
+  // Remove PayPal useEffect
 
-  useEffect(() => {
-    if (!errorPayPal && !loadingPaPal && paypal.clientId) {
-      const loadingPaPalScript = async () => {
-        paypalDispatch({
-          type: "resetOptions",
-          value: {
-            "client-id": paypal.clientId,
-            currency: "INR",
-          },
-        });
-        paypalDispatch({ type: "setLoadingStatus", value: "pending" });
-      };
-
-      if (order && !order.isPaid) {
-        if (!window.paypal) {
-          loadingPaPalScript();
-        }
-      }
-    }
-  }, [errorPayPal, loadingPaPal, order, paypal, paypalDispatch]);
-
-  function onApprove(data, actions) {
-    return actions.order.capture().then(async function (details) {
-      try {
-        await payOrder({ orderId, details });
-        refetch();
-        toast.success("Order is paid");
-      } catch (error) {
-        toast.error(error?.data?.message || error.message);
-      }
-    });
-  }
-
-  function createOrder(data, actions) {
-    return actions.order
-      .create({
-        purchase_units: [{ amount: { value: order.totalPrice } }],
-      })
-      .then((orderID) => {
-        return orderID;
-      });
-  }
-
-  function onError(err) {
-    toast.error(err.message);
-  }
+  // Remove PayPal onApprove, createOrder, onError
+  // Add Paytm payment handler
+  const handlePaytmPayment = async () => {
+    setShowQr((prev) => !prev);
+  };
 
   const deliverHandler = async () => {
     await deliverOrder(orderId);
@@ -166,11 +127,7 @@ const Order = () => {
             {order.paymentMethod}
           </p>
 
-          {order.isPaid ? (
-            <Messsage variant="success">Paid on {order.paidAt}</Messsage>
-          ) : (
-            <Messsage variant="danger">Not paid</Messsage>
-          )}
+          {order.isPaid ? null : null}
         </div>
 
         <h2 className="text-xl font-bold mb-2 mt-[3rem]">Order Summary</h2>
@@ -193,18 +150,81 @@ const Order = () => {
 
         {!order.isPaid && (
           <div>
-            {loadingPay && <Loader />}{" "}
-            {isPending ? (
-              <Loader />
-            ) : (
-              <div>
-                <div>
-                  <PayPalButtons
-                    createOrder={createOrder}
-                    onApprove={onApprove}
-                    onError={onError}
-                  ></PayPalButtons>
-                </div>
+            {loadingPay && <Loader />}
+            <div className="flex flex-col gap-2">
+              <button
+                onClick={handlePaytmPayment}
+                className="bg-blue-500 text-white w-full py-2 rounded"
+              >
+                {showQr ? "Hide Paytm QR" : "Show Paytm QR"}
+              </button>
+              <button
+                className="bg-gray-700 text-white w-full py-2 rounded"
+                onClick={async () => {
+                  // Mark as paid for Cash on Delivery
+                  try {
+                    const details = { status: "COMPLETED", paymentMethod: "CashOnDelivery" };
+                    await payOrder({ orderId, details });
+                    await refetch();
+                    toast.success("Order marked as paid (Cash on Delivery).");
+                  } catch (error) {
+                    toast.error(error?.data?.message || error.message);
+                  }
+                }}
+              >
+                Cash on Delivery (Mark as Paid)
+              </button>
+            </div>
+            {showQr && (
+              <div className="mt-4 flex flex-col items-center">
+                <p className="mb-2 text-center text-gray-700">
+                  Scan this QR code with any UPI app to pay
+                  <br />
+                  <span className="font-bold">Payee UPI: 8541962538@ptaxis</span>
+                </p>
+                <QRCode
+                  value={`upi://pay?pa=8541962538@ptaxis&pn=eComStore&am=${order.totalPrice}&cu=INR`}
+                  size={180}
+                />
+                <p className="mt-2 text-xs text-gray-500">
+                  Or pay directly to UPI ID:{" "}
+                  <span className="font-mono">8541962538@ptaxis</span>
+                </p>
+                <p className="mt-2 text-xs text-gray-500">
+                  <span className="font-bold">How to pay:</span>
+                  <br />
+                  1. Open this page on your computer.
+                  <br />
+                  2. Open any UPI app (Paytm, PhonePe, Google Pay, BHIM, etc.) on
+                  your mobile.
+                  <br />
+                  3. Use the app's "Scan & Pay" or "Scan QR" feature to scan this
+                  QR code on your computer screen.
+                  <br />
+                  4. Complete the payment in your mobile app.
+                  <br />
+                  <span className="font-bold">
+                    You cannot pay by clicking the QR code on desktop. You must
+                    scan it with your mobile UPI app.
+                  </span>
+                </p>
+                <button
+                  className="mt-4 bg-green-600 text-white px-4 py-2 rounded"
+                  onClick={async () => {
+                    // Mark as paid manually (simulate payment)
+                    try {
+                      const details = { status: "COMPLETED", paymentMethod: "Paytm-QR" };
+                      await payOrder({ orderId, details });
+                      await refetch();
+                      toast.success("Payment marked as completed.");
+                      setShowQr(false);
+                    } catch (error) {
+                      toast.error(error?.data?.message || error.message);
+                    }
+                  }}
+                >
+                  Payment is Completed
+                </button>
               </div>
             )}
           </div>
